@@ -57,7 +57,8 @@ public class PaisService extends ServicioGenerico<Pais, PaisRepository> {
         uri = null;
     countSaved=0;
     countUpdated=0;
-        return findAll();
+
+    return findAll();
     }
 
     @Transactional
@@ -105,6 +106,70 @@ public class PaisService extends ServicioGenerico<Pais, PaisRepository> {
 
     public long getCountUpdated() {
         return countUpdated;
+    }
+
+  public  boolean select(String region, int populationGT, String regionNE, int populationLT) throws Exception {
+        try{
+            log.info(" \n ---------- By "+region+" region ---------- \n");
+            showQueries(repository.findByRegion(region));
+
+            log.info(" \n ---------- By " +region+" region and population greater than "+populationGT+" ---------- \n");
+            showQueries(repository.findByRegionAndPoblacionGreaterThan(region,populationGT));
+
+            log.info(" \n ---------- By region other than "+regionNE+" ---------- \n");
+            showQueries(repository.findByRegionNot(regionNE));
+
+
+            log.info(" \n ---------- By population greater than 50000000 and less than "+populationLT+" ---------- \n");
+            showQueries(repository.findByPoblacionGreaterThanAndPoblacionLessThan(50000000,populationLT));
+
+            log.info(" \n ---------- Sorted by country name in ascending order  ---------- \n");
+            showQueries(repository.OrderByNombrePaisAsc());
+
+
+            return true;
+        }catch (Exception e){
+            log.info(e.getStackTrace().toString());
+            log.info(e.getMessage());
+            throw new Exception(e.getMessage());
+        }
+
+  }
+
+    public Pais updateByCountryName(String name, String newName, int newPopulation) throws Exception {
+        try{
+            log.info(" \n ---------- POINT 5.4 ---------- \n");
+            Pais pais=repository.findByNombrePais(name);
+            log.info("Before : "+pais.toString());
+            pais.setNombrePais(newName);
+            pais.setPoblacion(newPopulation);
+            save(pais);
+            log.info("After : "+pais.toString());
+            return pais;
+        }catch (Exception e){
+            log.info(e.getStackTrace().toString());
+            log.info(e.getMessage());
+            throw new Exception(e.getMessage());
+        }
+
+    }
+
+    public boolean  deleteByCodeCountry(int code){
+        try{
+            log.info(" \n ---------- POINT 5.5 ---------- \n");
+            Pais pais=repository.findByCodigoPais(code);
+            log.info("Country with code "+code+" : "+pais.toString());
+            delete(pais.getId());
+            log.info("The country with code "+code+" was removed");
+            return true;
+        }catch (Exception e){
+            log.info(e.getStackTrace().toString());
+            log.info(e.getMessage());
+            return false;
+        }
+    }
+   public void showQueries(List<Pais> countriesList){
+ countriesList.forEach(country-> log.info(country.toString()));
     }
 
 }

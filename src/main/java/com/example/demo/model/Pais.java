@@ -4,28 +4,34 @@ package com.example.demo.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 
 
-@Document
+@Document(collection="paises")
 @JsonIgnoreProperties(ignoreUnknown = true)  //Ignora las demás propiedades del json de la apiweb
 public class Pais extends Base implements Serializable {
-
+// Si hay una propiedad null no la persiiste porque es de esquema libre mongodb, después la recupera como null,
     @JsonProperty("callingCodes") //Asi se llama en realidad la propiedad del json, hay que respetar su nombre
     @Transient
     private int[] callingCodes;
+
+    @Indexed(unique=true) //Para accederlo más rapido y el único lo coloca como clave alternativa
     private Integer codigoPais;
 
     @JsonProperty("name")
-    private String nombrePais;
+    private String nombrePais; //Mongo no distingue entre Strings cortos o largos
 
     @JsonProperty("capital")
     private String capitalPais;
 
+    @Field(value="region") //En este caso no es necesaria esta anotación, para saber q existe, similar a column
     private String region;
 
     @JsonProperty("population")
@@ -36,7 +42,12 @@ public class Pais extends Base implements Serializable {
     private double[] latlng;
     private double latitud;
     private double longitud;
-public Pais(){} //Si me olvido de este no me crea la entidad
+    //Si pongo un documento de otra collección y no pongo ninguna anotación, directamente lo toma como embebido ya sea 1 a 1 composición o 1 a 0* composición.
+    //@DBRef(lazy=true) //para la relación con otras colecciones no embebidas, es para las relaciones de agregación que no se pueden embeber, tambien necesitan clave primaria. En el documento se crea una propiedad con una referencia al documento real. Y si es una colección entre corchetes pone las distintas referencias de cada documento.
+
+    // Si hay documentos embebidos solo a la colección padre le corresponde un DAO (repositorio):
+
+    public Pais(){} //Si me olvido de este no me crea la entidad
 
     public Pais(Pais copia) {
         this.id=copia.id;
@@ -152,17 +163,13 @@ public Pais(){} //Si me olvido de este no me crea la entidad
     @Override
     public String toString() {
         return "Pais{" +
-                "callingCodes=" + Arrays.toString(callingCodes) +
-                ", codigoPais=" + codigoPais +
+                "codigoPais=" + codigoPais +
                 ", nombrePais='" + nombrePais + '\'' +
                 ", capitalPais='" + capitalPais + '\'' +
                 ", region='" + region + '\'' +
                 ", poblacion=" + poblacion +
-                ", latlng=" + Arrays.toString(latlng) +
                 ", latitud=" + latitud +
                 ", longitud=" + longitud +
-                ", id='" + id + '\'' +
-                ", date=" + date +
                 '}';
     }
 }
